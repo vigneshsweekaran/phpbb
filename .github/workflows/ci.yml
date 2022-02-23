@@ -6,9 +6,29 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    services:
+        mysql:
+            image: ${{ matrix.db }}
+            env:
+                MYSQL_ALLOW_EMPTY_PASSWORD: yes
+                MYSQL_DATABASE: phpbb_tests
+            ports:
+                - 3306:3306
+            options: >-
+                --health-cmd="mysqladmin ping"
+                --health-interval=10s
+                --health-timeout=5s
+                --health-retries=3
+        redis:
+            image: redis
+            options: >-
+                --health-cmd "redis-cli ping"
+                --health-interval 10s
+                --health-timeout 5s
+                --health-retries 5
+            ports:
+                - 6379:6379
     steps:
     - uses: actions/checkout@v2
 
@@ -22,6 +42,38 @@ jobs:
 #         cd phpBB
 #         php ../composer.phar install
 
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+          php-version: 7.3
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, intl, gd, exif, iconv, mysqli, pdo, pdo_mysql, ldap
+          coverage: none
+    - name: Setup environment for phpBB
+      env:
+          DB: mysql
+          PHP_VERSION: 7.3
+          NOTESTS: '0'
+      run: |
+          .github/setup-phpbb.sh $DB $PHP_VERSION ${NOTESTS:-0}
+    - name: Setup database
+      env:
+          DB: mysql
+          MYISAM: false
+      run: |
+          .github/setup-database.sh $DB $MYISAM
+    - name: Setup SPHINX
+      run: |
+          .github/setup-sphinx.sh
+    - name: Lint tests
+      run: phpBB/vendor/bin/phpunit tests/lint_test.php
+    - name: Run unit tests
+      env:
+          DB: mysql
+      run: |
+          phpBB/vendor/bin/phpunit --configuration .github/phpunit-$DB-github.xml --verbose --stop-on-error
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
     - name: Sync code to server
       uses: burnett01/rsync-deployments@5.2
       with:
