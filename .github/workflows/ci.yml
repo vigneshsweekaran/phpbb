@@ -39,6 +39,6 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd /home/ubuntu/phpbb
+          cd /home/ubuntu/phpbb/phpBB
           php ../composer.phar install
           
