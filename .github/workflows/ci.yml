@@ -1,0 +1,23 @@
+name: Ci for phpbb
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Validate composer.json and composer.lock
+      run: |
+        cd phpBB
+        composer validate --strict
+
+    - name: Install dependencies
+      run: |
+        cd phpBB
+        php ../composer.phar install
