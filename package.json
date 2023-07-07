@@ -105,7 +105,7 @@
 		"gulp-sourcemaps": "^2.6.5",
 		"postcss": "^8.2.15",
 		"postcss-sorting": "^6.0.0",
-		"stylelint": "^13.13.1",
+		"stylelint": "^15.10.1",
 		"stylelint-order": "^4.1.0"
 	}
 }
